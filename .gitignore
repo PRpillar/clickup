@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 ^\.secrets$
+test_api.R
+test_fix.R
+credentials.json
