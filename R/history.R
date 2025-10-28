@@ -40,16 +40,17 @@ timers <- timers |>
 
 ### get team members ----
 teams <- httr::GET(
-  "https://api.clickup.com/api/v2/team",
+  glue::glue("https://api.clickup.com/api/v2/team/{team_id}"),
   httr::add_headers(Authorization = auth_clickup)
 )
 teams_json <- httr::content(teams, "parsed")
 
-teams_ds <- tibble::tibble(result = teams_json[["teams"]]) |>
-  tidyr::unnest_wider(col = .data[["result"]]) |>
-  tidyr::unnest_longer(.data$members) |>
-  tidyr::unnest_wider(.data$members, names_sep = "_") |>
-  tidyr::unnest_wider(.data$members_user, names_sep = "_") |>
+# Note: API returns { "team": {...} } not { "teams": [...] }
+teams_ds <- tibble::tibble(result = list(teams_json[["team"]])) |>
+  tidyr::unnest_wider(col = result) |>
+  tidyr::unnest_longer(members) |>
+  tidyr::unnest_wider(members, names_sep = "_") |>
+  tidyr::unnest_wider(members_user, names_sep = "_") |>
   dplyr::select(.data$members_user_id, .data$members_user_username) |>
   dplyr::mutate(`Who change` = stringr::str_remove(.data$members_user_username, "(?<=[A-Z])[a-z]+")) |>
   dplyr::rename(user_id = .data$members_user_id) |>
