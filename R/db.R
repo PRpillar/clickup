@@ -151,127 +151,130 @@ result <- time_ds |>
   dplyr::left_join(tasks_ds, by = c("task_id" = "id")) |>
   dplyr::relocate(c("list_name", "folder_name", "space_name"), .after = task_name)
 
-### time_entries write to googlesheet ----
-sheet_new <- result |>
-  dplyr::mutate(Project = team_name) |>
-  dplyr::mutate(folder_name = ifelse(.data$folder_name == "hidden", "", .data$folder_name)) |>
-  dplyr::mutate(
-    dt_load = as.character(lubridate::now(tzone = time_local)),
-    start = lubridate::as_datetime(.data$start),
-    end = lubridate::as_datetime(.data$end)
-  ) |>
-  dplyr::rename(
-    Space = .data$space_name,
-    Folder = .data$folder_name,
-    List = .data$list_name,
-    Task = .data$task_name,
-    Description = .data$description,
-    `Link to the task` = .data$url,
-    Start = .data$start,
-    End = .data$end,
-    Hours = .data$diff_hours
-  ) |>
-  dplyr::select(
-    .data$ID,
-    .data$Project,
-    .data$Space,
-    .data$Folder,
-    .data$List,
-    .data$Task,
-    .data$`Team member`,
-    .data$Description,
-    .data$`Link to the task`,
-    .data$Start,
-    .data$End,
-    .data$Hours,
-    dplyr::contains("err"),
-    .data$dt_load
-  ) |>
-  dplyr::arrange(.data$`Team member`, .data$Start) |>
-  dplyr::mutate(Description = as.character(.data$Description))
+# =========================
+# GOOGLE SHEETS: DISABLED
+# Everything below is commented out so nothing is uploaded/read/authenticated.
+# =========================
 
-### check colnames err
-if (!"err" %in% colnames(sheet_new)) {
-  sheet_new <- sheet_new |>
-    dplyr::mutate(err = "") |>
-    dplyr::relocate(err, .before = .data$dt_load)
-}
+# ### time_entries write to googlesheet ----
+# sheet_new <- result |>
+#   dplyr::mutate(Project = team_name) |>
+#   dplyr::mutate(folder_name = ifelse(.data$folder_name == "hidden", "", .data$folder_name)) |>
+#   dplyr::mutate(
+#     dt_load = as.character(lubridate::now(tzone = time_local)),
+#     start = lubridate::as_datetime(.data$start),
+#     end = lubridate::as_datetime(.data$end)
+#   ) |>
+#   dplyr::rename(
+#     Space = .data$space_name,
+#     Folder = .data$folder_name,
+#     List = .data$list_name,
+#     Task = .data$task_name,
+#     Description = .data$description,
+#     `Link to the task` = .data$url,
+#     Start = .data$start,
+#     End = .data$end,
+#     Hours = .data$diff_hours
+#   ) |>
+#   dplyr::select(
+#     .data$ID,
+#     .data$Project,
+#     .data$Space,
+#     .data$Folder,
+#     .data$List,
+#     .data$Task,
+#     .data$`Team member`,
+#     .data$Description,
+#     .data$`Link to the task`,
+#     .data$Start,
+#     .data$End,
+#     .data$Hours,
+#     dplyr::contains("err"),
+#     .data$dt_load
+#   ) |>
+#   dplyr::arrange(.data$`Team member`, .data$Start) |>
+#   dplyr::mutate(Description = as.character(.data$Description))
 
-### auth ----
-file_con <- file(name_google)
-writeLines(auth_google, file_con)
-close(file_con)
-googlesheets4::gs4_auth(path = name_google)
+# ### check colnames err
+# if (!"err" %in% colnames(sheet_new)) {
+#   sheet_new <- sheet_new |>
+#     dplyr::mutate(err = "") |>
+#     dplyr::relocate(err, .before = .data$dt_load)
+# }
 
-sheet_old <- googlesheets4::read_sheet(link, sheet_tm, col_types = "cccccccccTTdcc")
+# ### auth ----
+# file_con <- file(name_google)
+# writeLines(auth_google, file_con)
+# close(file_con)
+# googlesheets4::gs4_auth(path = name_google)
 
-### update sheet
-to_sheet <- sheet_old |>
-  dplyr::rows_upsert(sheet_new, by = "ID") |>
-  dplyr::arrange(.data$`Team member`, .data$Start)
+# sheet_old <- googlesheets4::read_sheet(link, sheet_tm, col_types = "cccccccccTTdcc")
 
-### check crossing ----
-left <- to_sheet |>
-  dplyr::select(
-    .data$ID,
-    .data$Start,
-    .data$End,
-    .data$`Team member`
-  ) |>
-  dplyr::mutate(
-    start = lubridate::floor_date(.data$Start, "minute"),
-    end = lubridate::floor_date(.data$End, "minute")
-  )
+# ### update sheet
+# to_sheet <- sheet_old |>
+#   dplyr::rows_upsert(sheet_new, by = "ID") |>
+#   dplyr::arrange(.data$`Team member`, .data$Start)
 
-right <- to_sheet |>
-  dplyr::select(
-    .data$ID,
-    .data$Start,
-    .data$End,
-    .data$`Team member`,
-    .data$dt_load
-  ) |>
-  dplyr::mutate(
-    start = lubridate::floor_date(.data$Start, "minute"),
-    end = lubridate::floor_date(.data$End, "minute")
-  )
+# ### check crossing ----
+# left <- to_sheet |>
+#   dplyr::select(
+#     .data$ID,
+#     .data$Start,
+#     .data$End,
+#     .data$`Team member`
+#   ) |>
+#   dplyr::mutate(
+#     start = lubridate::floor_date(.data$Start, "minute"),
+#     end = lubridate::floor_date(.data$End, "minute")
+#   )
 
-BiocManager::install("IRanges", update = F, ask = F)
+# right <- to_sheet |>
+#   dplyr::select(
+#     .data$ID,
+#     .data$Start,
+#     .data$End,
+#     .data$`Team member`,
+#     .data$dt_load
+#   ) |>
+#   dplyr::mutate(
+#     start = lubridate::floor_date(.data$Start, "minute"),
+#     end = lubridate::floor_date(.data$End, "minute")
+#   )
 
-crossing_time <- fuzzyjoin::interval_inner_join(left, right, by = c("start", "end")) |>
-  dplyr::filter(
-    .data$ID.x != .data$ID.y,
-    .data$`Team member.x` == .data$`Team member.y`,
-    .data$end.x != .data$start.y,
-    .data$end.y != .data$start.x
-  ) |>
-  dplyr::rowwise() |>
-  dplyr::mutate(ID = list(sort(c(.data$ID.x, .data$ID.y)))) |>
-  dplyr::mutate(ID = paste(.data$ID, collapse = "|")) |>
-  dplyr::ungroup() |>
-  dplyr::distinct(.data$ID, .keep_all = T) |>
-  dplyr::select(-c(
-    .data$start.x,
-    .data$start.y,
-    .data$end.x,
-    .data$end.y,
-    .data$`Team member.y`,
-    .data$ID
-  )) |>
-  dplyr::rename(`Team member` = .data$`Team member.x`) |>
-  dplyr::relocate(.data$`Team member`, .before = .data$ID.x)
+# BiocManager::install("IRanges", update = F, ask = F)
 
+# crossing_time <- fuzzyjoin::interval_inner_join(left, right, by = c("start", "end")) |>
+#   dplyr::filter(
+#     .data$ID.x != .data$ID.y,
+#     .data$`Team member.x` == .data$`Team member.y`,
+#     .data$end.x != .data$start.y,
+#     .data$end.y != .data$start.x
+#   ) |>
+#   dplyr::rowwise() |>
+#   dplyr::mutate(ID = list(sort(c(.data$ID.x, .data$ID.y)))) |>
+#   dplyr::mutate(ID = paste(.data$ID, collapse = "|")) |>
+#   dplyr::ungroup() |>
+#   dplyr::distinct(.data$ID, .keep_all = T) |>
+#   dplyr::select(-c(
+#     .data$start.x,
+#     .data$start.y,
+#     .data$end.x,
+#     .data$end.y,
+#     .data$`Team member.y`,
+#     .data$ID
+#   )) |>
+#   dplyr::rename(`Team member` = .data$`Team member.x`) |>
+#   dplyr::relocate(.data$`Team member`, .before = .data$ID.x)
 
+# ## write to table ----
+# googlesheets4::write_sheet(
+#   crossing_time,
+#   link,
+#   sheet_crossing
+# )
 
-## write to table ----
-googlesheets4::write_sheet(
-  crossing_time,
-  link,
-  sheet_crossing
-)
-
-googlesheets4::write_sheet(
-  to_sheet,
-  link,
-  sheet_tm
-)
+# googlesheets4::write_sheet(
+#   to_sheet,
+#   link,
+#   sheet_tm
+# )
