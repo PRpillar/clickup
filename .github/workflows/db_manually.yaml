@@ -65,7 +65,20 @@ jobs:
           remotes::install_deps(dependencies = TRUE)
         shell: Rscript {0}
 
-      - name: get clickup_data
+      - name: get clickup_data (run and capture log)
         run: |
-          source("R/db.R")
-        shell: Rscript {0}
+          mkdir -p artifacts
+          set -o pipefail
+          Rscript -e 'source("R/db.R")' 2>&1 | tee artifacts/run.log
+        shell: bash
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: clickup-results
+          path: |
+            artifacts/*.csv
+            artifacts/*.json
+            artifacts/*.rds
+            artifacts/run.log
+
