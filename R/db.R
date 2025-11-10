@@ -151,6 +151,23 @@ result <- time_ds |>
   dplyr::left_join(tasks_ds, by = c("task_id" = "id")) |>
   dplyr::relocate(c("list_name", "folder_name", "space_name"), .after = task_name)
 
+# ==== dump outputs for CI artifacts ====
+dir.create("artifacts", showWarnings = FALSE)
+
+# Main joined table
+readr::write_csv(result, "artifacts/result.csv")
+jsonlite::write_json(result, "artifacts/result.json", dataframe = "rows", pretty = TRUE)
+saveRDS(result, "artifacts/result.rds")
+
+# Optional: also dump inputs/metadata for debugging
+readr::write_csv(time_ds,  "artifacts/time_entries_raw.csv")
+readr::write_csv(tasks_ds, "artifacts/tasks_raw.csv")
+
+# Make the console log useful (will appear in Actions logs and run.log we tee below)
+message("=== RESULT PREVIEW (top 20 rows) ===")
+print(utils::head(result, 20))
+
+
 # =========================
 # GOOGLE SHEETS: DISABLED
 # Everything below is commented out so nothing is uploaded/read/authenticated.
