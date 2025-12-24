@@ -15,8 +15,25 @@ writeLines(auth_google, file_con)
 close(file_con)
 googlesheets4::gs4_auth(path = name_google)
 
+### Determine if current day is the first day of the month
+current_date <- lubridate::now(tzone = time_local)
+is_first_day <- lubridate::day(current_date) == 1
+
+### Adjust period to include previous month if it's the first day
+if (is_first_day) {
+  ### If it's the first day, process both previous month and current month
+  ### This catches time tracks that started on the last day of previous month
+  start_period <- lubridate::floor_date(current_date - lubridate::months(1), "month")
+  end_period <- current_date
+} else {
+  ### Regular processing: only current month
+  start_period <- lubridate::floor_date(current_date, "month")
+  end_period <- current_date
+}
+
 ### get archive ----
 month_archive <- googlesheets4::read_sheet(link, sheet_tm, col_types = "cccccccccTTdcc") |>
+  dplyr::filter(.data$Start >= start_period & .data$Start <= end_period) |>
   dplyr::select(.data$`Team member`, .data$Start, .data$End, .data$Hours) |>
   dplyr::mutate(
     month_arr = as.numeric(format(.data$Start, "%m")),
