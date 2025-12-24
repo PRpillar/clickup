@@ -15,18 +15,21 @@ writeLines(auth_google, file_con)
 close(file_con)
 googlesheets4::gs4_auth(path = name_google)
 
-### Determine if current day is the first day of the month
+### Determine if current day is within the first 2 days of the month
 current_date <- lubridate::now(tzone = time_local)
-is_first_day <- lubridate::day(current_date) == 1
+is_early_month <- lubridate::day(current_date) <= 2
 
-### Adjust period to include previous month if it's the first day
-if (is_first_day) {
-  ### If it's the first day, process both previous month and current month
-  ### This catches time tracks that started on the last day of previous month
+### Adjust period to include previous month during the first 2 days
+if (is_early_month) {
+  ### If it's the first or second day, process both previous month and current month
+  ### This catches time tracks that:
+  ### 1) Started on the last day of previous month
+  ### 2) Were still running when scripts ran on the 1st
+  ### 3) Got completed after the 1st day scripts ran
   start_period <- lubridate::floor_date(current_date - lubridate::months(1), "month")
   end_period <- current_date
 } else {
-  ### Regular processing: only current month
+  ### Regular processing: only current month (from day 3 onwards)
   start_period <- lubridate::floor_date(current_date, "month")
   end_period <- current_date
 }
