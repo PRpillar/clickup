@@ -26,7 +26,7 @@ if (is_early_month) {
   ### 1) Started on the last day of previous month
   ### 2) Were still running when scripts ran on the 1st
   ### 3) Got completed after the 1st day scripts ran
-  start_period <- lubridate::floor_date(current_date - lubridate::months(1), "month")
+  start_period <- lubridate::floor_date(current_date - months(1), "month")
   end_period <- current_date
 } else {
   ### Regular processing: only current month (from day 3 onwards)
